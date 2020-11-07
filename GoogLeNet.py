@@ -100,7 +100,8 @@ lr = 0.001
 epoch_num = 200
 trainBatchSize = 100
 testBatchSzie = 100
-device = device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# network = GoogLeNet().to(device)
 network = GoogLeNet()
 optimizer = optim.Adam(network.parameters(),lr = lr)
 scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[75, 150], gamma=0.5)
@@ -124,11 +125,14 @@ def train():
         total_sample = 0
         for batch_num,(data,target) in enumerate(train_loader):
             t1 = time.time()
+            # data = data.to(device)
+            # target = target.to(device)
             output = network(data)
             # print("output",output)
             step_loss = criterion(output,target)
             optimizer.zero_grad()
             step_loss.backward()
+            # step_loss.to(device)
             optimizer.step()
             _, prediction = torch.max(output, 1)
             # print("prediction", prediction)
@@ -166,5 +170,6 @@ def test():
 
 
 if __name__ == '__main__':
-    # train()
+    print(network)
+    train()
     test()

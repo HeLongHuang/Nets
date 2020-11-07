@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as transforms
 import torch.optim as optim
+import time
 
 
 # cuda
@@ -77,6 +78,7 @@ class Net(nn.Module):  # 训练 ALexNet
         return x
 
 network = Net().to(device)
+# network = Net()
 loss_func = nn.CrossEntropyLoss()  # 交叉熵损失
 optimizer = optim.SGD(network.parameters(), lr=0.01, momentum=0.9)  # 随机梯度下降
 
@@ -88,17 +90,20 @@ for epoch in range(10):
     total_loss = 0
     total_correct = 0
 
-
+    t1 = time.time()
     for batch in trainloader:
         images,labels = batch
+        images = images.to(device)
+        labels = labels.to(device)
         preds = network(images)
         loss = loss_func(preds,labels)
+        loss.to(device)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
         total_loss += loss
         total_correct += get_num_correct(preds,labels)
-    print("epoch", epoch, "total_correct", total_correct, "loss", total_loss)
+    t2 = time.time()
+    print("epoch", epoch, "total_correct", total_correct, "loss", total_loss.item(),"time:",t2 - t1)
 
 
