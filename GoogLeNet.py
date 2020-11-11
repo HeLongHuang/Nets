@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torchvision
 import torchvision.transforms as transforms
-import numpy as np
 import torch.optim as optim
 import time
 class Inception(nn.Module):
@@ -97,11 +96,11 @@ class GoogLeNet(nn.Module):
 
 
 lr = 0.001
-epoch_num = 200
+epoch_num = 10
 trainBatchSize = 100
 testBatchSzie = 100
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# network = GoogLeNet().to(device)
+network = GoogLeNet().to(device)
 network = GoogLeNet()
 optimizer = optim.Adam(network.parameters(),lr = lr)
 scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[75, 150], gamma=0.5)
@@ -125,8 +124,8 @@ def train():
         total_sample = 0
         for batch_num,(data,target) in enumerate(train_loader):
             t1 = time.time()
-            # data = data.to(device)
-            # target = target.to(device)
+            data = data.to(device)
+            target = target.to(device)
             output = network(data)
             # print("output",output)
             step_loss = criterion(output,target)
@@ -142,7 +141,9 @@ def train():
             total_sample += target.size(0)
             total_loss += step_loss
             t2 = time.time()
-            print("epoch:",epoch,"step:",batch_num,"step_loss:",step_loss.item(),"step_acc:",(step_correct / trainBatchSize).item(),"time:",t2 - t1)
+            # print("epoch:",epoch,"step:",batch_num,"step_loss:",step_loss.item(),"step_acc:",(step_correct / trainBatchSize).item(),"time:",t2 - t1)
+            if batch_num % 10 == 0:
+              print("epoch:{0:>3} =======> step:{1:>3}  step_loss:{2:>20}  step_acc:{3:>20}  time:{4:>20}".format(epoch,batch_num,step_loss.item(),(step_correct / trainBatchSize).item(),t2 - t1))
         print("********************************************************************")
         print("epoch:",epoch,"loss:",total_loss,"acc:",total_correct / total_sample)
         print("********************************************************************")
@@ -157,16 +158,19 @@ def test():
     total = 0
     with torch.no_grad():
         for batch_num,(data,target) in enumerate(test_loader):
+            data = data.to(device)
+            target = target.to(device)
             output = network(data)
             loss = criterion(output,target)
             test_loss += loss.item()
             _, prediction = torch.max(output, 1)
             total += target.size(0)
             current_correct = (prediction == target).sum()
-            print("currentcorrect",current_correct)
+            # print("currentcorrect",current_correct)
             test_correct += current_correct
-            print("test_batch_num:",batch_num,"test_batch_correct:",test_correct.item(),"test_batch_acc:",(current_correct / testBatchSzie).item())
-
+            # print("test_batch_num:",batch_num,"test_batch_correct:",test_correct.item(),"test_batch_acc:",(current_correct / testBatchSzie).item())
+            # print("epoch:{0:>3} =======> step:{1:>3}  step_loss:{2:>20}  step_acc:{3:>20}  time:{4:>20}".format(epoch,batch_num,step_loss.item(),(step_correct / trainBatchSize).item(),t2 - t1))
+            print("test_batch_num:{0:>3}  test_batch_correct:{1:>5}  test_batch_acc:{2:>20}".format(batch_num,test_correct.item(),(current_correct / testBatchSzie).item()))
 
 
 if __name__ == '__main__':
